@@ -81,6 +81,22 @@ void User::saveToDatabase()
         return;
     }
 
+    // بررسی تکراری نبودن کد ملی
+    query.prepare("SELECT COUNT(*) FROM users WHERE national_id = ?");
+    query.addBindValue(nationalID);
+    if (!query.exec()) {
+        QMessageBox::critical(this, "خطا", "بررسی کد ملی ناموفق بود:\n" + query.lastError().text());
+        db.close();
+        return;
+    }
+
+    query.next();
+    if (query.value(0).toInt() > 0) {
+        QMessageBox::warning(this, "تکراری", "کد ملی وارد شده قبلاً ثبت شده است.");
+        db.close();
+        return;
+    }
+
     // درج اطلاعات در جدول
     query.prepare("INSERT INTO users (national_id, name, lastname, password) VALUES (?, ?, ?, ?)");
     query.addBindValue(nationalID);
